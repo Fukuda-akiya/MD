@@ -25,6 +25,7 @@ RMSD_analysis = rms.RMSD(md_uni,
 			 )
 RMSD_analysis.run()
 
+#plot
 time = RMSD_analysis.results.rmsd[1:, 1]
 RMSD = RMSD_analysis.results.rmsd[1:, 2]
 

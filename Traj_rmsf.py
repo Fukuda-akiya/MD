@@ -5,19 +5,19 @@ from MDAnalysis.analysis import align,rms
 import seaborn as sb
 
 # Make Universe object from traj and parm
-md_uni01 = mda.Universe("../4YUS_dark_run_strip.prmtop",
-	  	        "../01/4YUS_dark_run_strip01.nc")
+md_uni01 = mda.Universe("/Users/fukuda/Kenkyu/OaPAC/dark_4YUS/Run/4YUS_dark_run_BB.prmtop",
+	  	        "/Users/fukuda/Kenkyu/OaPAC/dark_4YUS/Run/01/4YUS_dark_run_BB.nc")
 
-md_uni02 = mda.Universe("../4YUS_dark_run_strip.prmtop",
-	  	        "../02/4YUS_dark_run_auto02.nc")
+md_uni02 = mda.Universe("/Users/fukuda/Kenkyu/OaPAC/dark_4YUS/Run/4YUS_dark_run_BB.prmtop",
+	  	        "/Users/fukuda/Kenkyu/OaPAC/dark_4YUS/Run/02/4YUS_dark_run_auto.nc")
 
-md_uni03 = mda.Universe("../4YUS_dark_run_strip.prmtop",
-	  	        "../03/4YUS_dark_run_auto03.nc")
+md_uni03 = mda.Universe("/Users/fukuda/Kenkyu/OaPAC/dark_4YUS/Run/4YUS_dark_run_BB.prmtop",
+	  	        "/Users/fukuda/Kenkyu/OaPAC/dark_4YUS/Run/03/4YUS_dark_run_auto.nc")
 
 # load average structure pdb
-ave_str01 = mda.Universe("../01/4YUS_dark_run_average01.pdb")
-ave_str02 = mda.Universe("../02/4YUS_dark_run_average02.pdb")
-ave_str03 = mda.Universe("../03/4YUS_dark_run_average03.pdb")
+ave_str01 = mda.Universe("/Users/fukuda/Kenkyu/OaPAC/dark_4YUS/Run/01/4YUS_dark_run_rep01.pdb")
+ave_str02 = mda.Universe("/Users/fukuda/Kenkyu/OaPAC/dark_4YUS/Run/02/4YUS_dark_run_rep02.pdb")
+ave_str03 = mda.Universe("/Users/fukuda/Kenkyu/OaPAC/dark_4YUS/Run/03/4YUS_dark_run_rep03.pdb")
 
 # set traj frame 0
 md_uni01.trajectory[0]
@@ -27,7 +27,7 @@ md_uni03.trajectory[0]
 # alignment trajectory1
 alignment = align.AlignTraj(mobile = md_uni01,
 		   	    reference = ave_str01,
-			    select = "name CA",
+			    select = "backbone",
 			    in_memory = True)
 alignment.run()
 
@@ -40,7 +40,7 @@ RMSF_analysis01.run()
 # alignment trajectory2
 alignment = align.AlignTraj(mobile = md_uni02,
 		   	    reference = ave_str02,
-			    select = "name CA",
+			    select = "backbone",
 			    in_memory = True
 			   )
 alignment.run()
@@ -53,7 +53,7 @@ RMSF_analysis02.run()
 # alignment trajectory3
 alignment = align.AlignTraj(mobile = md_uni03,
 		   	    reference = ave_str03,
-			    select = "name CA",
+			    select = "backbone",
 			    in_memory = True
 			   )
 alignment.run()

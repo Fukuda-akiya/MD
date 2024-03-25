@@ -12,16 +12,16 @@ np.set_printoptions(threshold=np.inf)
 
 # Universeから 座標をndarrayに取り出す関数
 def extract(name):
-    a3helix = mda_uni.select_atoms(name)
-    coord_from_mda = np.array([a3helix.positions for frame in mda_uni.trajectory])
+    atom = mda_uni.select_atoms(name)
+    coord_from_mda = np.array([atom.positions for frame in mda_uni.trajectory])
 
     return coord_from_mda
 
 # 原子数の取得
 def atom_number(name):
-    a3helix = mda_uni.select_atoms(name)
+    atom = mda_uni.select_atoms(name)
 
-    return a3helix
+    return atom
 
 # 重心を計算する関数
 def center(coord,atom):
@@ -40,7 +40,7 @@ def normal(theta,coord,R):
                     [np.cos(theta), -np.sin(theta), 0],
                     [np.sin(theta),  np.cos(theta), 0],
                     [0, 0, 1],
-                      ])
+                    ])
     n_vector = np.zeros([len(coord),3])
     for i in range(len(coord)):
         for j in range(3):
@@ -54,6 +54,22 @@ def normal(theta,coord,R):
             n_norm[i][j] = n_vector[i][j] / norm
 
     return n_norm
+
+# Time windowをかける関数
+def window(width,coord):
+    for i in range(len(coord)):
+
+        imin = i - width * 0.5
+        if imin < 1:
+            imin = 1
+
+        imax = i + width * 0.5
+        if imax > len(coord):
+            imax = len(coord)
+
+        twist_window[i] = sum(twist[int(imin):int(imax)]) / (imax - imin + 1)
+
+    return twist_window
 
 ########################################
 ########################################
@@ -111,19 +127,22 @@ theta = np.pi * 0.5
 n_vector_bottom = normal(theta,coord_from_mdaA_bottom,R_bottom)
 n_vector_top = normal(theta,coord_from_mdaA_top,R_top)
 
-#for i in range(len(coord_from_mdaA_bottom)):
-#    print(str(i+1) + "\t" + str(np.linalg.norm(n_vector_bottom[i])))
-
 twist = np.zeros(len(coord_from_mdaA_bottom))
 frame = np.zeros(len(coord_from_mdaA_bottom))
 for i in range(len(coord_from_mdaA_bottom)):
     twist[i] = np.arcsin( np.linalg.norm( np.cross( n_vector_bottom[i],n_vector_top[i] ) ) ) * 180 / np.pi
     frame[i] = i + 1
 
+# Time windowをかける 
+width = 100
+twist_window = np.zeros(len(coord_from_mdaA_bottom))
+twist_window = window(width,coord_from_mdaA_bottom)
+
 # plot
 plt.rcParams["figure.figsize"] = (8, 6)
 plt.title("WT Dark", fontweight = "bold")
 plt.plot(frame, twist, lw = 1.25, color = "blue")
+plt.plot(frame, twist_window, lw = 1.25, color = "black")
 plt.xlabel("Frame", fontweight = "bold", fontsize = 12)
 plt.ylabel("Twist [Degree]", fontweight = "bold", fontsize = 12)
 plt.xticks(fontweight = "bold", fontsize = 11)

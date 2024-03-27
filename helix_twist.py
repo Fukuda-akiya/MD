@@ -10,7 +10,7 @@ np.set_printoptions(threshold=np.inf)
 ###############Function##################
 #########################################
 
-# Universeから 座標をndarrayに取り出す関数
+# Universeから座標をndarrayに取り出す関数
 def extract(name):
     atom = mda_uni.select_atoms(name)
     coord_from_mda = np.array([atom.positions for frame in mda_uni.trajectory])
@@ -33,6 +33,15 @@ def center(coord,atom):
                 center[i][k] += coord[i,j,k] / len(atom)
 
     return center
+
+# 重心間のベクトルを計算する関数
+def diff(coord,centerA,centerB):
+    R = np.zeros([len(coord),3])
+    for i in range(len(coord)):
+        for j in range(3):
+            R[i][j] = centerA[i][j] - centerB[i][j]
+
+    return R
 
 # 法線ベクトルを作成する関数
 def normal(theta,coord,R):
@@ -116,11 +125,8 @@ centerB_top = center(coord_from_mdaB_top,atom_number_top)
 # 重心間のベクトルの計算
 R_bottom = np.zeros([len(coord_from_mdaA_bottom),3])
 R_top = np.zeros([len(coord_from_mdaA_top),3])
-
-for i in range(len(coord_from_mdaA_bottom)):
-    for j in range(3):
-        R_bottom[i][j] = centerA_bottom[i][j] - centerB_bottom[i][j]
-        R_top[i][j] = centerA_top[i][j] - centerB_top[i][j]
+R_bottom = diff(coord_from_mdaA_bottom,centerA_bottom,centerB_bottom)
+R_top = diff(coord_from_mdaA_top,centerA_top,centerB_top)
 
 # 方線ベクトルの生成（回転行列の作用）
 theta = np.pi * 0.5
@@ -140,7 +146,7 @@ twist_window = window(width,coord_from_mdaA_bottom)
 
 # plot
 plt.rcParams["figure.figsize"] = (8, 6)
-plt.title("WT Dark", fontweight = "bold")
+plt.title("WT Dark", fontweight = "bold", fontsize = 12)
 plt.plot(frame, twist, lw = 1.25, color = "blue")
 plt.plot(frame, twist_window, lw = 1.25, color = "black")
 plt.xlabel("Frame", fontweight = "bold", fontsize = 12)

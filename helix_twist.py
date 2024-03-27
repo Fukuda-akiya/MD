@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 
 np.set_printoptions(threshold=np.inf)
 
+##### 定数や読み込むファイル #####
+
 # 次元数(x,y,z etc.)
 dim = 3
 # Runの本数
@@ -13,9 +15,9 @@ Run = 3.0
 # window幅
 width = 100
 # 読み込むparmtop,trajectory,reference
-parm_name = "../parm_files/4YUS_dark_run_for_secstruct.prmtop"
-traj_name = "../traj_files/4YUS_dark_run_for_secstruct.nc"
-ref_name  = "../pdb_files/ref_for_secstruct.pdb"
+parm_name = "../parm_files/4YUS_light_holo_updated_for_secstruct.prmtop"
+traj_name = "../traj_files/4YUS_light_run_for_secstruct.nc"
+ref_name  = "/home/users/dzn/Kenkyu/OaPAC/Analysis/dark/4YUS_holo/pdb_files/ref_for_secstruct.pdb"
 # fitting
 fitting_area = "resid 146 to 366 512 to 733" 
 # select resid
@@ -24,11 +26,13 @@ residA_top = "resid 121:125"
 residB_bottom = "resid 469:473"
 residB_top = "resid 487:491"
 # About fig
-fig_title = "WT Dark"
-fig_name = "Twist_WT_dark_holo_3us.png"
+fig_title = "WT Light"
+fig_name = "Twist_WT_light_holo_3us.png"
 # 表示領域
 ymin = 40
 ymax = 70
+# plot color
+twist_color = "orange"
 
 ##### 基本的にここから下はいじらない #####
 
@@ -188,7 +192,7 @@ twist_window = window(width,coord_from_mdaA_bottom,twist,frame)
 # plot
 plt.rcParams["figure.figsize"] = (8, 6)
 plt.title(fig_title, fontweight = "bold", fontsize = 12)
-plt.plot(frame, twist, lw = 1.25, color = "blue")
+plt.plot(frame, twist, lw = 1.25, color = twist_color)
 plt.plot(frame, twist_window, lw = 1.25, color = "black")
 plt.xlabel("Frame", fontweight = "bold", fontsize = 12)
 plt.ylabel("Twist [Degree]", fontweight = "bold", fontsize = 12)

@@ -23,6 +23,7 @@ trajin2 = "/home/users/dzn/Kenkyu/OaPAC/Analysis/compare/holo/Angle/cluster/8qfg
 parm2 = "/home/users/dzn/Kenkyu/OaPAC/Analysis/8QFG/parmtop/updated_for_contact_wofmn.prmtop"
 
 select1 = 'resSeq 1 to 700'
+resi = 700
 
 def hbond(trajin, parm, select):
     # load trajectory and topology
@@ -31,6 +32,7 @@ def hbond(trajin, parm, select):
     selected_atoms = traj.topology.select(select)
     selected_residues = set(top.atom(idx).residue.index for idx in selected_atoms)
     print(f"traj information:{traj}")
+    print(f"Residue number:{resi}")
     
     # get the information of the hydrogen bond
     hbond_count = Counter()
@@ -55,9 +57,9 @@ def hbond(trajin, parm, select):
     residue_to_idx = {residue.index: residue.index for residue in residues}
 
     # Initialize the matrix
-    contact_matrix = np.zeros((700, 700))
-    for i in range(700):
-        for j in range(700):
+    contact_matrix = np.zeros((resi, resi))
+    for i in range(resi):
+        for j in range(resi):
             if i == j:
                 contact_matrix[i, j] = 1
             else:
@@ -73,15 +75,26 @@ def hbond(trajin, parm, select):
 
     return contact_matrix, hbond_count
 
-def diff(hbond_count1, hbond_count2,contact_matrix1, contact_matrix2):
-    all_res_pairs = set(hbond_count1.keys()).union(set(hbond_count2.keys()))
+def normalize_pairs(hbond_dict):
+    normalized = Counter()
+    for (resi1, resi2), value in hbond_dict.items():
+        pair = tuple(sorted([str(resi1), str(resi2)]))
+        normalized[pair] += value
+    return normalized
+
+def diff(hbond_count1, hbond_count2, contact_matrix1, contact_matrix2):
+    hbond1 = normalize_pairs(hbond_count1)
+    hbond2 = normalize_pairs(hbond_count2)
 
     hbond_diff = Counter()
-    for res_pair in all_res_pairs:
-            hbond_diff[res_pair] = hbond_count1.get(res_pair, 0) - hbond_count2.get(res_pair, 0)
-                    
-    diff_matrix = np.subtract(contact_matrix1, contact_matrix2)
+    all_keys = set(hbond1.keys()).union(hbond2.keys())
+    for pair in all_keys:
+        count1 = hbond1.get(pair, 0.0)
+        count2 = hbond2.get(pair, 0.0)
+        if count1 != 0 or count2 != 0:
+            hbond_diff[pair] = count1 - count2
 
+    diff_matrix = np.subtract(contact_matrix1, contact_matrix2)
     return hbond_diff,diff_matrix
 
 def plot_heatmap(selecter,matrix):
@@ -104,16 +117,48 @@ def plot_heatmap(selecter,matrix):
     plt.savefig("diff_switch_wtdark_AvsA.png", bbox_inches='tight', pad_inches = 0, dpi=300)
 
 def file_write(selecter, file_name, hbond_count):
+    
+    # set residue number
+    valid_residues = set(range(1, 144)) | set(range(351, 494))
+
     if selecter == "diff":
         with open(file_name, "w") as fo:
             for res_pair, count in hbond_count.most_common():
-                if count >= 0.1 or count <= -0.1:
-                    fo.write(f"{res_pair}: {count:.2f}\n")
+                res1, res2 = res_pair
+                
+                import re
+                def parse_residue(res):
+                    match = re.match(r"([A-Z]+)(\d+)", res)
+                    if match:
+                        return match.group(1), int(match.group(2))
+                    else:
+                        return res, -1
+
+                res1_name, res1_number = parse_residue(res1)
+                res2_name, res2_number = parse_residue(res2)
+
+                if (res1_number in valid_residues and  res2_number in valid_residues) and (count >= 0.1 or count <= -0.1):
+                    formatted_res_pair = f"({res1_name}{res1_number}, {res2_name}{res2_number})"
+                    fo.write(f"{formatted_res_pair}: {count:.2f}\n")
     elif selecter == "contact":
         with open(file_name, "w") as fo:
             for res_pair, count in hbond_count.most_common():
-                if count >= 0.1:
-                    fo.write(f"{res_pair}: {count:.2f}\n")
+                res1, res2 = res_pair
+                
+                import re
+                def parse_residue(res):
+                    match = re.match(r"([A-Z]+)(\d+)", res)
+                    if match:
+                        return match.group(1), int(match.group(2))
+                    else:
+                        return res, -1
+
+                res1_name, res1_number = parse_residue(res1)
+                res2_name, res2_number = parse_residue(res2)
+
+                if (res1_number in valid_residues and  res2_number in valid_residues) and (count >= 0.1 or count <= -0.1):
+                    formatted_res_pair = f"({res1_name}{res1_number}, {res2_name}{res2_number})"
+                    fo.write(f"{formatted_res_pair}: {count:.2f}\n")
     else:
         exit(1)
      
@@ -121,8 +166,8 @@ def main():
     contact_matrix1, hbond_count1  = hbond(trajin1, parm1, select1)
     contact_matrix2, hbond_count2  = hbond(trajin2, parm2, select1)
     hbond_diff, diff_matrix = diff(hbond_count1, hbond_count2, contact_matrix1, contact_matrix2)
-    #file_write("diff", "diff.dat", hbond_diff)
-    plot_heatmap("diff",diff_matrix)
+    file_write("diff", "diff.dat", hbond_diff)
+    #plot_heatmap("diff",diff_matrix)
 
 if __name__ == "__main__":
     main()
